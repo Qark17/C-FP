@@ -1,28 +1,22 @@
-#include <fstream>
-#include <iterator>
-#include <string>
 #include <algorithm>
-#include <sstream>
 #include <iostream>
+#include <vector>
 using namespace std;
 int main() {
-    string name = "name.txt";
-    string line;
-    cout << "Введите числа:\n";
-    getline(cin, line);
-    ofstream out(name);
-    if (!out) {
-        return 1;
+    int n;
+    cout << "Введите число элементов: ";
+    if (!(cin >> n))
+        return 0;
+    vector<int> v(n);
+    cout << "Введите элементы: ";
+    for (int i = 0; i < n; ++i)
+        cin >> v[i];
+    sort(v.begin(), v.end());
+    for (auto it = v.begin(); it != v.end(); ) {
+        auto ub = upper_bound(it, v.end(), *it);
+        const auto cnt = static_cast<size_t>(ub - it);
+        cout << *it << ' ' << cnt << " раз(а) \n";
+        it = ub;
     }
-
-    istringstream iss(line);
-
-    istream_iterator<int> begin(iss);
-    istream_iterator<int> end;
-    ostream_iterator<int> out_numbers(out, " ");
-
-    transform(begin, end, out_numbers, [](int x) {
-        return x * 2;
-        });
     return 0;
 }

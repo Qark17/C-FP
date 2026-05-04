@@ -1,19 +1,43 @@
-#include <algorithm>
+#include <deque>
 #include <iostream>
 #include <iterator>
+#include <limits>
+#include <sstream>
+#include <string>
 #include <vector>
 using namespace std;
+template <typename Container>
+void container(Container& c, const string& prompt, const string&) {
+    cout << prompt;
+    string line;
+    if (!getline(cin, line))
+        throw runtime_error("Ошибка чтения ввода.");
+    istringstream iss(line);
+    Container temp((istream_iterator<int>(iss)), istream_iterator<int>());
+    if (!iss.eof() || temp.empty() || temp.size() % 2 != 0)
+        throw runtime_error("Ошибка: строка должна содержать только чётное число целых числа.");
+    c = move(temp);
+}
 int main() {
-    cout << "Введите элементы: ";
-    vector<int> v((istream_iterator<int>(cin)), istream_iterator<int>());
-    if (v.empty())
-        return 0;
-    sort(v.begin(), v.end());
-    for (auto it = v.begin(); it != v.end();) {
-        auto ub = upper_bound(it, v.end(), *it);
-        const auto cnt = static_cast<size_t>(ub - it);
-        cout << *it << ' ' << cnt << " раз(а)\n";
-        it = ub;
+    vector<int> v;
+    deque<int> d;
+    try {
+        container(v, "Введите элементы вектора: ", "вектора");
+        container(d, "Введите элементы дека: ", "дека");
     }
+    catch (const exception& e) {
+        cerr << e.what() << '\n';
+        return 1;
+    }
+    const size_t v_half = v.size() / 2;
+    const size_t d_half = d.size() / 2;
+    v.insert(v.end(), d.begin(), d.begin() + static_cast<ptrdiff_t>(d_half));
+    d.insert(d.begin(),
+        v.rbegin() + static_cast<ptrdiff_t>(d_half),
+        v.rbegin() + static_cast<ptrdiff_t>(d_half + v_half));
+    for (size_t i = 0; i < v.size(); ++i)
+        cout << v[i] << (i + 1 < v.size() ? ' ' : '\n');
+    for (size_t i = 0; i < d.size(); ++i)
+        cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
     return 0;
 }

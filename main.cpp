@@ -1,43 +1,65 @@
-#include <deque>
+#include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <iterator>
-#include <limits>
-#include <sstream>
 #include <string>
 #include <vector>
-using namespace std;
-template <typename Container>
-void container(Container& c, const string& prompt, const string&) {
-    cout << prompt;
-    string line;
-    if (!getline(cin, line))
-        throw runtime_error("Ошибка чтения ввода.");
-    istringstream iss(line);
-    Container temp((istream_iterator<int>(iss)), istream_iterator<int>());
-    if (!iss.eof() || temp.empty() || temp.size() % 2 != 0)
-        throw runtime_error("Ошибка: строка должна содержать только чётное число целых числа.");
-    c = move(temp);
-}
-int main() {
-    vector<int> v;
-    deque<int> d;
-    try {
-        container(v, "Введите элементы вектора: ", "вектора");
-        container(d, "Введите элементы дека: ", "дека");
+struct point {
+    int x;
+    int y;
+    std::string s;
+    point() : x(0), y(0), s("") {}
+    point(int x_, int y_, const std::string& s_)
+        : x(x_), y(y_), s(s_) {
     }
-    catch (const exception& e) {
-        cerr << e.what() << '\n';
+};
+point operator+(const point& A, const point& B) {
+    return point(
+        A.x + B.x,
+        A.y + B.y,
+        A.s + B.s
+    );
+}
+std::istream& operator>>(std::istream& is, point& p) {
+    is >> p.x >> p.y >> p.s;
+    return is;
+}
+std::ostream& operator<<(std::ostream& os, const point& p) {
+    os << p.x << ' ' << p.y << ' ' << p.s;
+    return os;
+}
+
+int main() {
+    std::fstream file("Сname.txt", std::ios::in);
+    if (!file) {
+        std::cout << "Ошибка чтения файла";
         return 1;
     }
-    const size_t v_half = v.size() / 2;
-    const size_t d_half = d.size() / 2;
-    v.insert(v.end(), d.begin(), d.begin() + static_cast<ptrdiff_t>(d_half));
-    d.insert(d.begin(),
-        v.rbegin() + static_cast<ptrdiff_t>(d_half),
-        v.rbegin() + static_cast<ptrdiff_t>(d_half + v_half));
-    for (size_t i = 0; i < v.size(); ++i)
-        cout << v[i] << (i + 1 < v.size() ? ' ' : '\n');
-    for (size_t i = 0; i < d.size(); ++i)
-        cout << d[i] << (i + 1 < d.size() ? ' ' : '\n');
+    std::vector<point> V;
+    std::copy(
+        std::istream_iterator<point>(file),
+        std::istream_iterator<point>(),
+        std::back_inserter(V)
+    );
+    file.close();
+    std::transform(
+        V.begin(),
+        V.end(),
+        V.begin(),
+        [](const point& p) {
+            return p + point(10, 20, "Z");
+        }
+    );
+    file.open("name.txt", std::ios::out);
+    if (!file) {
+        std::cout << "File write error";
+        return 1;
+    }
+    std::copy(
+        V.begin(),
+        V.end(),
+        std::ostream_iterator<point>(file, "\n")
+    );
+    file.close();
     return 0;
 }
